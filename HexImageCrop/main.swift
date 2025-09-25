@@ -1,4 +1,3 @@
-import AppKit
 import CoreGraphics
 
 extension CGPoint {
@@ -39,11 +38,7 @@ extension CGPath {
 
 	static func hex(origin: CGPoint, radii: CGFloat) -> CGPath {
 		.make { path in
-			let corners = CGPoint.hexCorners
-			path.move(to: origin + corners[0] * radii)
-			corners.dropFirst().forEach { corner in
-				path.addLine(to: origin + corner * radii)
-			}
+			path.addLines(between: CGPoint.hexCorners.map { origin + $0 * radii })
 			path.closeSubpath()
 		}
 	}
@@ -54,9 +49,6 @@ extension CGImage {
 	static func draw(size: CGSize, drawings: (CGContext) -> Void) -> CGImage? {
 		let width = Int(size.width)
 		let height = Int(size.height)
-
-		var rgbSpace: CGColorSpace { CGColorSpaceCreateDeviceRGB() }
-
 		let bppx = 32
 		let bpcp = 8
 
@@ -66,7 +58,7 @@ extension CGImage {
 			height: height,
 			bitsPerComponent: bpcp,
 			bytesPerRow: width * bppx / 8,
-			space: rgbSpace,
+			space: CGColorSpaceCreateDeviceRGB(),
 			bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue
 		) else {
 			return nil
@@ -91,9 +83,27 @@ extension CGImage {
 	}
 }
 
+import AppKit
+
+/// # Hexagon sprite
+let size = CGSize(width: 64, height: 64)
+let rep = NSBitmapImageRep(cgImage: .draw(size: size) { ctx in
+	let origin = CGPoint(x: size.width, y: size.height) / 2
+	let radii = origin.x - 1.0
+	ctx.addPath(.hex(origin: origin, radii: radii))
+	NSColor.black.setStroke()
+	NSColor.clear.setFill()
+	ctx.strokePath()
+	ctx.fillPath()
+}!)
+let pngData = rep.representation(using: .png, properties: [:])!
+let outFile = URL(fileURLWithPath: "~/Desktop/Hex.png")
+try pngData.write(to: outFile)
+
+/// # Hex crop directory contents
 let fm = FileManager.default
-let inputURL = URL(fileURLWithPath: "/Users/poed/Desktop")
-let outputURL = URL(fileURLWithPath: "/Users/poed/Desktop/Hexes")
+let inputURL = URL(fileURLWithPath: "~/Desktop/Terrain")
+let outputURL = inputURL.appending(path: "Hexes", directoryHint: .isDirectory)
 
 try fm.createDirectory(at: outputURL, withIntermediateDirectories: true)
 
@@ -105,7 +115,10 @@ for file in files where file.pathExtension == "png" {
 
 		let rep = NSBitmapImageRep(cgImage: cropped)
 		if let pngData = rep.representation(using: .png, properties: [:]) {
-			let outFile = outputURL.appendingPathComponent(file.lastPathComponent)
+			let outFile = outputURL.appending(
+				path: file.lastPathComponent,
+				directoryHint: .notDirectory
+			)
 			try pngData.write(to: outFile)
 		}
 	}
