@@ -89,12 +89,9 @@ import AppKit
 let size = CGSize(width: 64, height: 64)
 let rep = NSBitmapImageRep(cgImage: .draw(size: size) { ctx in
 	let origin = CGPoint(x: size.width, y: size.height) / 2
-	let radii = origin.x - 1.0
-	ctx.addPath(.hex(origin: origin, radii: radii))
-	NSColor.black.setStroke()
-	NSColor.clear.setFill()
+	ctx.addPath(.hex(origin: origin, radii: origin.x))
+	ctx.setStrokeColor(gray: 0.15, alpha: 1.0)
 	ctx.strokePath()
-	ctx.fillPath()
 }!)
 let pngData = rep.representation(using: .png, properties: [:])!
 let outFile = URL(fileURLWithPath: "~/Desktop/Hex.png")
