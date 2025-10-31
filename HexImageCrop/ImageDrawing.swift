@@ -1,4 +1,6 @@
 import CoreGraphics
+import Foundation
+import AppKit
 
 extension CGImage {
 
@@ -23,6 +25,30 @@ extension CGImage {
 		drawings(context)
 
 		return context.makeImage()
+	}
+
+	var size: CGSize {
+		CGSize(width: width, height: height)
+	}
+
+	var pngData: Data? {
+		NSBitmapImageRep(cgImage: self).representation(using: .png, properties: [:])
+	}
+
+	static func image(url: URL) -> CGImage? {
+		NSImage(contentsOf: url).flatMap { img in
+			img.cgImage(forProposedRect: nil, context: nil, hints: nil)
+		}
+	}
+
+	func masked(_ mask: CGImage) -> CGImage? {
+		.draw(size: mask.size) { ctx in
+			ctx.clip(
+				to: mask.size.rect,
+				mask: mask
+			)
+			ctx.draw(self, in: size.rect)
+		}
 	}
 
 	func croppedToHex(size: CGSize) -> CGImage? {

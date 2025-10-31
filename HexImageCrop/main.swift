@@ -19,7 +19,7 @@ func drawHex(at path: String, line: NSColor?, base: NSColor?) throws {
 	try pngData.write(to: outFile)
 }
 
-func hexCropImages(in folder: String) throws {
+func hexCropImages(in folder: String, using mask: String) throws {
 	let fm = FileManager.default
 	let inputURL = URL(fileURLWithPath: folder)
 	let outputURL = inputURL.appending(path: "Hexes", directoryHint: .isDirectory)
@@ -27,13 +27,13 @@ func hexCropImages(in folder: String) throws {
 	try fm.createDirectory(at: outputURL, withIntermediateDirectories: true)
 
 	let files = try fm.contentsOfDirectory(at: inputURL, includingPropertiesForKeys: nil)
-	for file in files where file.pathExtension == "png" {
-		if let nsImage = NSImage(contentsOf: file),
-		   let cgImage = nsImage.cgImage(forProposedRect: nil, context: nil, hints: nil),
-		   let cropped = cgImage.croppedToHex(size: nsImage.size) {
+	let maskImage = CGImage.image(url: URL(fileURLWithPath: mask))!
 
-			let rep = NSBitmapImageRep(cgImage: cropped)
-			if let pngData = rep.representation(using: .png, properties: [:]) {
+	for file in files where file.pathExtension == "png" {
+		let img = CGImage.image(url: file)
+		let mskd = img?.masked(maskImage)
+		if let image = mskd {
+			if let pngData = image.pngData {
 				let outFile = outputURL.appending(
 					path: file.lastPathComponent,
 					directoryHint: .notDirectory
@@ -44,6 +44,6 @@ func hexCropImages(in folder: String) throws {
 	}
 }
 
-try drawHex(at: "~/Desktop/Cell.png", line: .init(white: 0.15, alpha: 1.0), base: nil)
-try drawHex(at: "~/Desktop/Fog.png", line: nil, base: .init(white: 0.15, alpha: 0.15))
-//try hexCropImages(in: "~/Desktop/Terrain")
+//try drawHex(at: "~/Desktop/Cell.png", line: .init(white: 0.15, alpha: 1.0), base: nil)
+//try drawHex(at: "~/Desktop/Fog.png", line: nil, base: .init(white: 0.15, alpha: 0.15))
+try hexCropImages(in: "~/Desktop/Tiles", using: "~/Desktop/HexMask.png")

@@ -28,6 +28,11 @@ extension CGPoint {
 	}
 }
 
+extension CGSize {
+
+	var rect: CGRect { .init(origin: .zero, size: self) }
+}
+
 extension CGPath {
 
 	static func make(_ transform: (CGMutablePath) -> Void) -> CGPath {
