@@ -40,11 +40,4 @@ extension CGPath {
 		transform(path)
 		return path
 	}
-
-	static func hex(origin: CGPoint, radius: CGFloat) -> CGPath {
-		.make { path in
-			path.addLines(between: CGPoint.hexCorners.map { origin + $0 * radius })
-			path.closeSubpath()
-		}
-	}
 }
